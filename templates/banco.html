@@ -1,0 +1,139 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container">
+    {% if str_mensagemErro|length > 0 %}
+        <div class="alert alert-danger" role="alert">
+            {{ str_mensagemErro}}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    {% if str_mensagemSucesso|length > 0 %}
+        <div class="alert alert-success" role="alert">
+            {{ str_mensagemSucesso}}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    <form class="border border-light p-5" action="/banco/" method="POST">
+    {% if atualizando%}
+        <input type="hidden" name="BancoId" value="{{banco.BancoId}}">
+        <p class="h4 mb-4 text-center">CADASTRO DE BANCO</p>
+        <input type="text" id="BancoNome" name="BancoNome" class="form-control mb-4" placeholder="Nome Do Banco ou Conta" required="required" value="{{banco.BancoNome}}"  maxlength="50">
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="BancoAtivo" name="BancoAtivo" {{'checked' if (banco.BancoAtivo or not banco.BancoId) else ''}}>
+                    <label class="custom-control-label" for="BancoAtivo">Ativo?</label>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="BancoInvestimento"  name="BancoInvestimento" {{'checked' if banco.BancoInvestimento else ''}}>
+                    <label class="custom-control-label" for="BancoInvestimento">É uma conta de Investimento de Valores?SS</label>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="BancoSaldoMonetizado" name="BancoSaldoMonetizado" {{'checked' if banco.BancoSaldoMonetizado else ''}}>
+                    <label class="custom-control-label" for="BancoSaldoMonetizado">Considerar Movimentações nos Cálculos de Análise?</label>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-info btn-block my-4" type="submit">Gravar!</button>
+    {% endif %}
+
+    <!--LISTAGEM DE REGISTROS -->
+     {% if not atualizando%}
+        <table id="ListaBanco" class="display compact nowrap table-condensed" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Ativo?</th>
+                    <th>Conta Investimento?</th>
+                    <th>Monetizável?</th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for n in banco %}
+                <tr>
+                    <td>{{n.BancoNome}}</td>
+                    <td>{{'Sim' if n.BancoAtivo else 'Não'}}</td>
+                    <td>{{'Sim' if n.BancoInvestimento else 'Não'}}</td>
+                    <td>{{'Sim' if n.BancoSaldoMonetizado else 'Não'}}</td>
+                    <td align="center">
+                        <button type="button" class="btn btn-primary" onclick="UglyRedirect('/banco/?BancoId={{ n.BancoId }}');">...</button>
+                        <button type="button" class="btn btn-danger"  data-href="/banco/?exclui=1&BancoId={{ n.BancoId }}" data-href2="{{ n.BancoNome}}" data-toggle="modal" data-target="#confirm-delete">X</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    </form>
+
+    <!--MODAL DE CONFIRMAÇÃO -->
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Confirmação</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Deseja excluir este Banco?</p>
+                    <p class="debug-url"></p>
+
+                    <p class="txtMensagem"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block footer %}
+        <script type="text/javascript" class="init">
+                $('#ListaBanco').DataTable( {
+                    language: {
+                        url: "http://cdn.datatables.net/plug-ins/1.10.9/i18n/Portuguese-Brasil.json"
+                    },
+                    order:  [
+                                [ 1, "desc" ],
+                                [ 0, "asc" ]
+                            ],
+                    dom: 'Bfrtip',
+                    responsive: true,
+                    buttons: [
+                        {
+                            text: 'Novo',
+                            className: 'btn btn-success',
+                            action: function ( e, dt, node, config ) {
+                                UglyRedirect('/banco/?BancoId=0');
+                            }
+                        },
+                        'excelHtml5',
+                        'pdfHtml5'
+                    ]
+                } );
+
+
+
+        </script>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% macro dropdown(name, data, selected, extra = '') %}
+    <select name="{{ name }}"  {{ extra|safe }}>
+        {%- for ind, val in data %}
+            <option value="{{ ind }}" {% if ind|string == selected|string %}selected="selected"{% endif %}>{{ val }}</option>
+        {%- endfor %}
+    </select>
+{% endmacro %}
+
+{% macro dropdownAgrupada(name, data, selected, extra = '') %}
+    <select name="{{ name }}"  {{ extra|safe }}>
+        {%- for ind, val, Pai, PaiNome in data %}
+            {% if Pai is none %}
+                <optgroup label="{{ val }}">
+
+            {% else %}
+                <option value="{{ ind }}" data-tokens="{{ PaiNome }}" {% if ind|string == selected|string %}selected="selected"{% endif %}>{{ val }}</option>
+
+            {% endif %}
+        {%- endfor %}
+    </select>
+{% endmacro %}

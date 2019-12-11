@@ -1,0 +1,327 @@
+{% extends "layout.html" %}
+{% from 'controles/macros.html' import dropdown, dropdownAgrupada %}
+
+{% block content %}
+    {% if str_mensagemErro|length > 0 %}
+        <div class="alert alert-danger" role="alert">
+            {{ str_mensagemErro}}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    {% if str_mensagemSucesso|length > 0 %}
+        <div class="alert alert-success" role="alert">
+            {{ str_mensagemSucesso}}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    {% if atualizando%}
+
+    <form style="margin-bottom:0;" action="/lancamentos/" method="POST">
+        <input type="hidden" name="LancamentoId" value="{{Lancamento.LancamentoId}}">
+        <p class="h4 mb-4 text-center">CADASTRO DE LANÇAMENTO</p>
+        <div class="row">
+            <div class="col-sm-4">
+                <label for="LancamentoData" class="col-form-label-sm">Data:</label>
+                <input class="form-control mb-4" placeholder="Data Lançamento" type="text" id="datepicker" name="LancamentoData" value="{{Lancamento.LancamentoData.strftime('%d/%m/%Y') if Lancamento.LancamentoData else ''}}" maxlength="10" required="required">
+            </div>
+            <div class="col-sm-8">
+                <label for="LancamentoValor" class="col-form-label-sm">Valor:</label>
+                <input type="text" class="form-control text-left"  id="LancamentoValorDebito" name="LancamentoValor"  required="required" value="{{(Lancamento.LancamentoValor|string).replace(".", ",") if Lancamento.LancamentoValor else ''}}"  data-thousands="." data-decimal="," data-prefix="R$ " maxlength="18" />
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <label for="BancoId" class="col-form-label-sm">Conta:</label>
+                {{ dropdown('BancoId', Bancos, Lancamento.BancoId|string, extra='id="BancoId" class="form-control mb-4"   required="required"') }}
+            </div>
+            <div class="col-sm-4">
+                <label for="ClassificacaoId" class="col-form-label-sm">Classificação:</label>
+                {% if ClassificacaoTipo =='C'%}
+                    {{ dropdownAgrupada('ClassificacaoId', Receitas, Lancamento.ClassificacaoId|string, extra='id="ClassificacaoId" class="form-control mb-4 selectpicker" data-live-search="true"   required="required"') }}
+                {%else%}
+                    {{ dropdownAgrupada('ClassificacaoId', Despesas, Lancamento.ClassificacaoId|string, extra='id="ClassificacaoId" class="form-control mb-4 selectpicker"  data-live-search="true"  required="required"') }}
+                {%endif%}
+
+            </div>
+
+            <div class="col-sm-4">
+                <label for="PessoaId" class="col-form-label-sm">Pessoa:</label>
+                    {{ dropdown('PessoaId', Pessoas, Lancamento.PessoaId|string, extra='id="PessoaId" class="form-control mb-4"   required="required"') }}
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <label for="LancamentoDescricao" class="col-form-label-sm">Descrição:</label>
+                <input type="text" id="LancamentoDescricao" name="LancamentoDescricao" class="form-control mb-4" placeholder="Descrição do Lançamento" required="required" value="{{Lancamento.LancamentoDescricao}}" maxlength="200">
+            </div>
+        </div>
+        <button class="btn btn-info btn-block my-4" type="submit">Gravar!</button>
+    </form>
+    {% endif %}
+
+    <!--LISTAGEM DE REGISTROS -->
+     {% if not atualizando%}
+        <div id="exTab1" class="w-100 p-3" >
+            <nav class="nav nav-pills flex-column flex-sm-row" >
+                <!-- active show-->
+                <a class="flex-sm-fill text-sm-center nav-link nav-linkDIOGO" href="#debito"  data-toggle="tab">Débito</a>
+                <a class="flex-sm-fill text-sm-center nav-link nav-linkDIOGO" href="#credito" data-toggle="tab">Crédito</a>
+                <a class="flex-sm-fill text-sm-center nav-link nav-linkDIOGO" href="#transf" data-toggle="tab">Transferência</a>
+                <a class="flex-sm-fill text-sm-center nav-link nav-linkDIOGO" href="/lancamentos/?F=1" >Ver Futuros</a>
+                <a class="flex-sm-fill text-sm-center nav-link nav-linkDIOGO" href="/lancamentos/?R=1" >Ver + que 20 registros</a>
+            </nav>
+
+            <div class="tab-content clearfix ">
+                <!--active show -->
+                <div class="tab-pane" id="debito">
+                    <form style="margin-bottom:0;"  action="/lancamentos/" method="POST" name="frmdebito" id="frmdebito">
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <label for="LancamentoData" class="col-form-label-sm">Data:</label>
+                                <input class="form-control mb-4" placeholder="Data Lançamento" type="text" id="LancamentoDataDebito" name="LancamentoData" value="{{Lancamento.LancamentoData.strftime('%d/%m/%Y') if Lancamento.LancamentoData else str_hoje}}" maxlength="10" required="required"">
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="LancamentoValor" class="col-form-label-sm">Valor:</label>
+                                <input type="text" class="form-control text-left"  id="LancamentoValorDebito" name="LancamentoValor"  required="required" value="{{(Lancamento.LancamentoValor|string).replace(".", ",") if Lancamento.LancamentoValor else ''}}"  data-thousands="." data-decimal="," data-prefix="R$ " maxlength="18" />
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="BancoId" class="col-form-label-sm">Conta:</label>
+                                {{ dropdown('BancoId', Bancos, extra='id="BancoId" class="form-control mb-4"   required="required"') }}
+
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="PessoaId" class="col-form-label-sm">Pessoa:</label>
+                                {{ dropdown('PessoaId', Pessoas, extra='id="PessoaId" class="form-control mb-4"   required="required"') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label for="ClassificacaoId" class="col-form-label-sm">Classificação:</label>
+                                {{ dropdownAgrupada('ClassificacaoId', Despesas, extra='id="ClassificacaoId" class="form-control mb-4 selectpicker"  data-live-search="true"   required="required"') }}
+
+                            </div>
+                            <div class="col-sm-5">
+                                <label for="LancamentoDescricao" class="col-form-label-sm">Descrição:</label>
+                                <input type="text" id="LancamentoDescricao" name="LancamentoDescricao" class="form-control mb-4" placeholder="Descrição do Lançamento" required="required" value="{{Lancamento.LancamentoDescricao}}" maxlength="200">
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="LancamentoDescricao" class="col-form-label-sm">&nbsp;</label>
+                                <button class="form-control btn btn-success btn-block " name="enviar" id="enviar" type="submit">Gravar!</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane " id="credito">
+                    <form style="margin-bottom:0;" action="/lancamentos/" method="POST" name="frmcredito" id="frmcredito">
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <label for="LancamentoData" class="col-form-label-sm">Data:</label>
+                                <input class="form-control mb-4" placeholder="Data Lançamento" type="text" id="LancamentoDataCredito" name="LancamentoData" value="{{Lancamento.LancamentoData.strftime('%d/%m/%Y') if Lancamento.LancamentoData else str_hoje}}" maxlength="10" required="required">
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="LancamentoValor" class="col-form-label-sm">Valor:</label>
+                                <input type="text" class="form-control text-left"  id="LancamentoValorCredito" name="LancamentoValor"  required="required" value="{{(Lancamento.LancamentoValor|string).replace(".", ",") if Lancamento.LancamentoValor else str_hoje}}"  data-thousands="." data-decimal="," data-prefix="R$ " maxlength="18" />
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="BancoId" class="col-form-label-sm">Conta:</label>
+                                {{ dropdown('BancoId', Bancos, extra='id="BancoId" class="form-control mb-4"   required="required"') }}
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="PessoaId" class="col-form-label-sm">Pessoa:</label>
+                                {{ dropdown('PessoaId', Pessoas, extra='id="PessoaId" class="form-control mb-4"   required="required"') }}
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label for="ClassificacaoId" class="col-form-label-sm">Classificação:</label>
+                                {{ dropdownAgrupada('ClassificacaoId', Receitas, extra='id="ClassificacaoId" class="form-control mb-4 selectpicker"  data-live-search="true"   required="required"') }}
+
+                            </div>
+                            <div class="col-sm-5">
+                                <label for="LancamentoDescricao" class="col-form-label-sm">Descrição:</label>
+                                <input type="text" id="LancamentoDescricao" name="LancamentoDescricao" class="form-control mb-4" placeholder="Descrição do Lançamento" required="required" value="{{Lancamento.LancamentoDescricao}}" maxlength="200">
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="enviar" class="col-form-label-sm">&nbsp;</label>
+                                <button class="form-control btn btn-success btn-block " name="enviar" id="enviar" type="submit">Gravar!</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane" id="transf">
+                    <form style="margin-bottom:0;"  action="/lancamentos/" method="POST" name="frmtransf" id="frmtransf">
+                        <input type="hidden" name="transfere" value="1">
+                        <div class="row">
+                            <div class="col-sm-2">
+                                <label for="LancamentoData" class="col-form-label-sm">Data:</label>
+                                <input class="form-control mb-4" placeholder="Data Lançamento" type="text" id="LancamentoDataTransf" name="LancamentoData" value="{{Lancamento.LancamentoData.strftime('%d/%m/%Y') if Lancamento.LancamentoData else ''}}" maxlength="10" required="required">
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="BancoIdOrigem" class="col-form-label-sm">Origem:</label>
+                                {{ dropdown('BancoIdOrigem', Bancos, extra='id="BancoIdOrigem" class="form-control mb-4"   required="required"') }}
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="LancamentoValor" class="col-form-label-sm">Valor:</label>
+                                <input type="text" class="form-control text-left"  id="LancamentoValorTransf" name="LancamentoValor"  required="required" value="{{(Lancamento.LancamentoValor|string).replace(".", ",") if Lancamento.LancamentoValor else ''}}"  data-thousands="." data-decimal="," data-prefix="R$ " maxlength="18" />
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="BancoIdDestino" class="col-form-label-sm">Destino:</label>
+                                {{ dropdown('BancoIdDestino', Bancos, extra='id="BancoIdDestino" class="form-control mb-4"   required="required"') }}
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="enviar" class="col-form-label-sm">&nbsp:</label>
+                                <button class="form-control btn btn-success btn-block " name="enviar" id="enviar" type="submit">Transferir!</button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+         <br>
+        <div class="row">
+            <div class="col-sm-12">
+                <table id="ListaLancamento" class="display compact nowrap table-condensed" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th class="all">Data</th>
+                            <th class="all">Valor</th>
+                            <th class="all">Conta</th>
+                            <th>Saldo</th>
+                            <th>Descrição</th>
+                            <th>Classificação</th>
+                            <!--<th>Pessoa</th>-->
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for n in Lancamento %}
+                        <tr>
+                            <td nowrap>{{n.DataLancamento}}</td>
+                            <td>{{n.Valor}}</td>
+                            <td>{{n.Banco}}</td>
+                            <td>{{n.Saldo}}</td>
+                            <td>{{n.Descricao}}</td>
+                            <td>{{n.Classificacao}}</td>
+                            <!--<td>{{n.Pessoa}}</td>-->
+                            <td align="center">
+                                <button type="button" class="btn btn-primary btn-xs" onclick="UglyRedirect('/lancamentos/?LancamentoId={{ n.LancamentoId }}&ClassificacaoTipo={{ n.ClassificacaoTipo }}');">...</button>
+                                <button type="button" class="btn btn-danger btn-xs"  data-href="/lancamentos/?exclui=1&LancamentoId={{ n.LancamentoId }}" data-href2="{{ n.Descricao}}" data-toggle="modal" data-target="#confirm-delete">X</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!--MODAL DE CONFIRMAÇÃO -->
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Confirmação</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Deseja excluir esta Lancamento?</p>
+                    <p class="debug-url"></p>
+
+                    <p class="txtMensagem"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer %}
+        <script type="text/javascript" class="init">
+            $( function() {
+                $( "#LancamentoDataDebito" ).datepicker({
+                    dateFormat: "dd/mm/yy"
+                });
+            } );
+            $( function() {
+                $( "#LancamentoDataCredito" ).datepicker({
+                    dateFormat: "dd/mm/yy"
+                });
+            } );
+            $( function() {
+                $( "#LancamentoDataTransf" ).datepicker({
+                    dateFormat: "dd/mm/yy"
+                });
+            } );
+
+            $(function() {
+                $('#LancamentoValorCredito').maskMoney();
+            })
+            $(function() {
+                $('#LancamentoValorDebito').maskMoney();
+            })
+            $(function() {
+                $('#LancamentoValorTransf').maskMoney();
+            })
+
+            $('#ListaLancamento').DataTable( {
+                    initComplete: function () {
+                        this.api().columns().every( function () {
+                            var column = this;
+                            var select = $('<select><option value=""></option></select>')
+                                .appendTo( $(column.header()).empty() )
+                               .on( 'change', function () {
+                                    var val = $.fn.dataTable.util.escapeRegex(
+                                        $(this).val()
+                                    );
+                                    column
+                                        .search( val ? '^'+val+'$' : '', true, false )
+                                        .draw();
+                                } );
+                            column.data().unique().sort().each( function ( d, j ) {
+                                select.append( '<option value="'+d+'">'+d+'</option>' )
+                            } );
+                        } );
+                    },
+                    responsive: true,
+                    language: {
+                        url: "http://cdn.datatables.net/plug-ins/1.10.9/i18n/Portuguese-Brasil.json"
+                    },
+                    bSort: false,
+                    pageLength: 500,
+                    lengthMenu: [[500, 1000, 1500, -1], [500, 1000, 1500, "All"]],
+                    dom: 'Bfrtip',
+                    buttons: [
+                        //{
+                        //    text: 'Novo',
+                        //    className: 'btn btn-success',
+                        //    action: function ( e, dt, node, config ) {
+                        //        UglyRedirect('/lancamentos/?LancamentoId=0');
+                        //    }
+                        //},
+                        'excelHtml5'
+                        //,'pdfHtml5'
+                    ]
+                } );
+
+
+        </script>
+{% endblock %}
+
+{% block css %}
+
+{% endblock %}

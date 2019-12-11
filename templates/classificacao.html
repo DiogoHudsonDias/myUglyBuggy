@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container">
+    {% if str_mensagemErro|length > 0 %}
+        <div class="alert alert-danger" role="alert">
+            {{ str_mensagemErro}}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    {% if str_mensagemSucesso|length > 0 %}
+        <div class="alert alert-success" role="alert">
+            {{ str_mensagemSucesso}}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    <form class="border border-light p-5" action="/classificacao/" method="POST">
+    {% if atualizando%}
+        <input type="hidden" name="ClassificacaoId" value="{{Classificacao.ClassificacaoId}}">
+        <p class="h4 mb-4 text-center">CADASTRO DE CLASSIFICAÇÃO</p>
+
+
+        <div class="row">
+            <div class="col-sm-12">
+                <input type="text" id="ClassificacaoNome" name="ClassificacaoNome" class="form-control mb-4" placeholder="Nome da Classificacao" required="required" value="{{Classificacao.ClassificacaoNome}}" maxlength="50">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <select name="ClassificacaoTipo" id="ClassificacaoTipo" class="form-control mb-4" >
+                        <option value="C" {{ 'SELECTED' if Classificacao.ClassificacaoTipo == 'C' else ''}}>Crédito</option>
+                        <option value="D" {{ 'SELECTED' if Classificacao.ClassificacaoTipo == 'D' else ''}}>Débito</option>
+                </select>
+            </div>
+
+            <div class="col-sm-5">
+                <select class="form-control mb-4" name="Pai" id="Pai">
+                    {% for pai in Pais%}
+                        <option value="{{ pai.ClassificacaoId}}" >{{ pai.ClassificacaoNome }} ({{ pai.ClassificacaoTipo}})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="Contabilizavel" name="Contabilizavel" {{'checked' if (Classificacao.Contabilizavel or not Classificacao.ClassificacaoId) else ''}} >
+                    <label class="custom-control-label" for="Contabilizavel">Contabilizável?</label>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-info btn-block my-4" type="submit">Gravar!</button>
+    {% endif %}
+
+    <!--LISTAGEM DE REGISTROS -->
+     {% if not atualizando%}
+        <table id="ListaClassificacao" class="display compact nowrap table-condensed" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Pai</th>
+                    <th>Tipo</th>
+                    <th>Contab??</th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for n in Classificacao %}
+                <tr>
+                    <td class="font-weight-bold">{{n.ClassificacaoNome}}</td>
+                    <td>{{n.Pai.ClassificacaoNome}}</td>
+                    <td>{{'Crédito' if (n.ClassificacaoTipo == 'C') else 'Débito'}}</td>
+                    <td>{{'Sim' if (n.Contabilizavel) else 'Não'}}</td>
+                    <td align="center">
+                        <button type="button" class="btn btn-primary" onclick="UglyRedirect('/classificacao/?ClassificacaoId={{ n.ClassificacaoId }}');">...</button>
+                        <button type="button" class="btn btn-danger"  data-href="/classificacao/?exclui=1&ClassificacaoId={{ n.ClassificacaoId }}" data-href2="{{ n.ClassificacaoNome}}" data-toggle="modal" data-target="#confirm-delete">X</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    </form>
+
+    <!--MODAL DE CONFIRMAÇÃO -->
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Confirmação</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Deseja excluir esta Classificacao?</p>
+                    <p class="debug-url"></p>
+
+                    <p class="txtMensagem"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+        <script type="text/javascript" class="init">
+                $('#ListaClassificacao').DataTable( {
+                    language: {
+                        url: "http://cdn.datatables.net/plug-ins/1.10.9/i18n/Portuguese-Brasil.json"
+                    },
+                    responsive: true,
+                    order:  [
+                                [ 1, "desc" ],
+                                [ 0, "asc" ]
+                            ],
+                    dom: 'Bfrtip',
+                    buttons: [
+                        {
+                            text: 'Novo',
+                            className: 'btn btn-success',
+                            action: function ( e, dt, node, config ) {
+                                UglyRedirect('/classificacao/?ClassificacaoId=0');
+                            }
+                        },
+                        'excelHtml5',
+                        'pdfHtml5'
+                    ]
+
+                } );
+
+        </script>
+{% endblock %}

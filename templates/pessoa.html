@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container">
+    {% if str_mensagemErro|length > 0 %}
+        <div class="alert alert-danger" role="alert">
+            {{ str_mensagemErro}}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    {% if str_mensagemSucesso|length > 0 %}
+        <div class="alert alert-success" role="alert">
+            {{ str_mensagemSucesso}}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
+    <form class="border border-light p-5" action="/pessoa/" method="POST">
+    {% if atualizando%}
+        <input type="hidden" name="PessoaId" value="{{Pessoa.PessoaId}}">
+        <p class="h4 mb-4 text-center">CADASTRO DE PESSOA</p>
+        <input type="text" id="PessoaNome" name="PessoaNome" class="form-control mb-4" placeholder="Nome Do Pessoa ou Conta" required="required" value="{{Pessoa.PessoaNome}}"  maxlength="50">
+        <div class="d-flex justify-content-between">
+            <div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="PessoaAtivo" name="PessoaAtivo" {{'checked' if (Pessoa.PessoaAtivo or not Pessoa.PessoaId) else ''}}>
+                    <label class="custom-control-label" for="PessoaAtivo">Ativo?</label>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-info btn-block my-4" type="submit">Gravar!</button>
+    {% endif %}
+
+    <!--LISTAGEM DE REGISTROS -->
+     {% if not atualizando%}
+        <table id="ListaPessoa" class="display compact nowrap table-condensed" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Ativo?</th>
+                    <th>&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for n in Pessoa %}
+                <tr>
+                    <td>{{n.PessoaNome}}</td>
+                    <td>{{'Sim' if n.PessoaAtivo else 'Não'}}</td>
+                    <td align="center">
+                        <button type="button" class="btn btn-primary" onclick="UglyRedirect('/pessoa/?PessoaId={{ n.PessoaId }}');">...</button>
+                        <button type="button" class="btn btn-danger"  data-href="/pessoa/?exclui=1&PessoaId={{ n.PessoaId }}" data-href2="{{ n.PessoaNome}}" data-toggle="modal" data-target="#confirm-delete">X</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    </form>
+
+    <!--MODAL DE CONFIRMAÇÃO -->
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Confirmação</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Deseja excluir esta Pessoa?</p>
+                    <p class="debug-url"></p>
+
+                    <p class="txtMensagem"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block footer %}
+        <script type="text/javascript" class="init">
+                $('#ListaPessoa').DataTable( {
+                    language: {
+                        url: "http://cdn.datatables.net/plug-ins/1.10.9/i18n/Portuguese-Brasil.json"
+                    },
+                    responsive: true,
+                    order:  [
+                                [ 1, "desc" ],
+                                [ 0, "asc" ]
+                            ],
+                    dom: 'Bfrtip',
+                    buttons: [
+                        {
+                            text: 'Novo',
+                            className: 'btn btn-success',
+                            action: function ( e, dt, node, config ) {
+                                UglyRedirect('/pessoa/?PessoaId=0');
+                            }
+                        },
+                        'excelHtml5',
+                        'pdfHtml5'
+                    ]
+
+                } );
+
+        </script>
+{% endblock %}
